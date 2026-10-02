@@ -1,0 +1,142 @@
+name: infocontract
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_bloc: ^9.1.1
+  flutter_contacts:
+  hydrated_bloc: ^10.0.0
+  flutter_svg: ^2.2.0
+  lottie: ^3.3.1
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.4.1
+  skeletonizer: ^2.1.0+1
+  auto_route: ^10.1.2
+  timezone: ^0.10.1
+  easy_localization: ^3.0.7+1
+  path_provider: ^2.1.5
+  equatable: ^2.0.7
+  signature: ^6.3.0
+  google_fonts: ^6.2.1
+  image_picker: ^1.2.1
+  image: ^4.7.2
+  crop_your_image: ^1.0.2
+  shared_preferences:
+  file_picker: ^10.3.8
+  pdfx: ^2.9.2
+  syncfusion_flutter_pdf:
+  permission_handler: ^12.0.1
+  syncfusion_flutter_pdfviewer: ^32.1.24
+  dio: ^5.9.0
+  get_it: ^8.0.3
+  google_maps_flutter: ^2.12.3
+  flutter_pdfview:
+  image_cropper: ^11.0.0
+  pull_to_refresh_flutter3: ^2.0.1
+  webview_flutter: ^4.13.1
+  flutter_local_notifications: ^20.0.0
+  firebase_messaging: ^16.1.1
+  firebase_core: ^4.4.0
+  intl_phone_number_field: ^0.2.1
+  just_audio: ^0.10.6
+  share_plus: ^12.0.2
+
+
+
+
+
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+  flutter_lints: ^5.0.0
+  auto_route_generator: ^10.2.4
+  build_runner: ^2.5.4
+  flutter_gen: ^5.10.0
+  flutter_gen_runner: ^5.10.0
+
+
+
+
+flutter_gen:
+  output: lib/core/constants/assets/
+  line_length: 80
+
+  integrations:
+    flutter_svg: true
+    lottie: true
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: fonts/Outfit-Thin.ttf
+          weight: 100
+        - asset: fonts/Outfit-ExtraLight.ttf
+          weight: 200
+        - asset: fonts/Outfit-Light.ttf
+          weight: 300
+        - asset: fonts/Outfit-Regular.ttf
+          weight: 400
+        - asset: fonts/Outfit-Medium.ttf
+          weight: 500
+        - asset: fonts/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Outfit-Bold.ttf
+          weight: 700
+        - asset: fonts/Outfit-Black.ttf
+          weight: 900
+    - family: Calligraffitti
+      fonts:
+        - asset: fonts/sign_fonts/Calligraffitti-Regular.ttf
+          weight: 400
+
+    - family: Devonshire
+      fonts:
+        - asset: fonts/sign_fonts/Devonshire-Regular.ttf
+          weight: 400
+
+    - family: Handlee
+      fonts:
+        - asset: fonts/sign_fonts/Handlee-Regular.ttf
+          weight: 400
+
+    - family: Petit_Formal_Script
+      fonts:
+        - asset: fonts/sign_fonts/PetitFormalScript-Regular.ttf
+          weight: 400
+
+    - family: Playball
+      fonts:
+        - asset: fonts/sign_fonts/Playball-Regular.ttf
+          weight: 400
+
+  assets:
+    - assets/localization/
+    - assets/svg/
+    - assets/png/
+    - assets/png/home/
+    - assets/png/splash/
+    - assets/svg/outlined/
+    - assets/svg/filled/
+    - assets/svg/appbar/
+    - assets/svg/home/
+    - assets/svg/constant/
+    - assets/svg/profile/
+
+
+
+

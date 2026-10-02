@@ -2,8 +2,11 @@ import 'package:equatable/equatable.dart';
 import 'package:infocontract/features/aarti/domain/model/aarti_content_tab.dart';
 import 'package:infocontract/features/home/domain/model/aarti_model.dart';
 
+enum AartiPlayerStatus { initial, loading, success, empty, error }
+
 class AartiPlayerState extends Equatable {
   const AartiPlayerState({
+    this.status = AartiPlayerStatus.initial,
     this.aartis = const [],
     this.currentIndex = 0,
     this.position = Duration.zero,
@@ -14,9 +17,11 @@ class AartiPlayerState extends Equatable {
     this.isLoopAll = false,
     this.isShuffle = false,
     this.hasError = false,
+    this.errorMessage,
     this.contentTab = AartiContentTab.lyrics,
   });
 
+  final AartiPlayerStatus status;
   final List<AartiModel> aartis;
   final int currentIndex;
   final Duration position;
@@ -27,7 +32,13 @@ class AartiPlayerState extends Equatable {
   final bool isLoopAll;
   final bool isShuffle;
   final bool hasError;
+  final String? errorMessage;
   final AartiContentTab contentTab;
+
+  bool get isInitial => status == AartiPlayerStatus.initial;
+  bool get isSuccess => status == AartiPlayerStatus.success;
+  bool get isEmpty => status == AartiPlayerStatus.empty || aartis.isEmpty;
+  bool get isError => status == AartiPlayerStatus.error || hasError;
 
   AartiModel? get currentAarti =>
       aartis.isEmpty ? null : aartis[currentIndex.clamp(0, aartis.length - 1)];
@@ -38,6 +49,7 @@ class AartiPlayerState extends Equatable {
   }
 
   AartiPlayerState copyWith({
+    AartiPlayerStatus? status,
     List<AartiModel>? aartis,
     int? currentIndex,
     Duration? position,
@@ -48,9 +60,11 @@ class AartiPlayerState extends Equatable {
     bool? isLoopAll,
     bool? isShuffle,
     bool? hasError,
+    String? errorMessage,
     AartiContentTab? contentTab,
   }) {
     return AartiPlayerState(
+      status: status ?? this.status,
       aartis: aartis ?? this.aartis,
       currentIndex: currentIndex ?? this.currentIndex,
       position: position ?? this.position,
@@ -61,12 +75,14 @@ class AartiPlayerState extends Equatable {
       isLoopAll: isLoopAll ?? this.isLoopAll,
       isShuffle: isShuffle ?? this.isShuffle,
       hasError: hasError ?? this.hasError,
+      errorMessage: errorMessage ?? this.errorMessage,
       contentTab: contentTab ?? this.contentTab,
     );
   }
 
   @override
   List<Object?> get props => [
+        status,
         aartis,
         currentIndex,
         position,
@@ -77,6 +93,8 @@ class AartiPlayerState extends Equatable {
         isLoopAll,
         isShuffle,
         hasError,
+        errorMessage,
         contentTab,
       ];
 }
+

@@ -2,16 +2,19 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:infocontract/core/api/constants/api_constants.dart';
+import 'package:infocontract/core/di/locator.dart';
 import 'package:infocontract/features/aarti/bloc/cubit/aarti_player_state.dart';
 import 'package:infocontract/features/aarti/domain/model/aarti_content_tab.dart';
 import 'package:infocontract/features/aarti/domain/service/aarti_service.dart';
+import 'package:infocontract/features/home/domain/model/aarti_model.dart';
 
 class AartiPlayerCubit extends Cubit<AartiPlayerState> {
   AartiPlayerCubit({
     required String initialAartiId,
     AartiService? aartiService,
     AudioPlayer? audioPlayer,
-  })  : _aartiService = aartiService ?? AartiService(),
+  })  : _aartiService = aartiService ?? locator<AartiService>(),
         _player = audioPlayer ?? AudioPlayer(),
         super(const AartiPlayerState()) {
     _init(initialAartiId);
@@ -26,16 +29,11 @@ class AartiPlayerCubit extends Cubit<AartiPlayerState> {
   StreamSubscription<int?>? _indexSub;
 
   Future<void> _init(String aartiId) async {
-    final aartis = _aartiService.getAartis();
-    final index = aartis.indexWhere((aarti) => aarti.id == aartiId);
-    final startIndex = index < 0 ? 0 : index;
-
     emit(
       state.copyWith(
-        aartis: aartis,
-        currentIndex: startIndex,
         isLoading: true,
         hasError: false,
+        status: AartiPlayerStatus.loading,
       ),
     );
 
@@ -61,16 +59,88 @@ class AartiPlayerCubit extends Cubit<AartiPlayerState> {
     });
 
     try {
-      await _player.setAudioSources(
-        aartis
-            .map((aarti) => AudioSource.uri(Uri.parse(aarti.audioUrl)))
-            .toList(),
-        initialIndex: startIndex,
+      // Fetch the specific Aarti by ID from GET /api/v1/aartis/:id
+      // and the surrounding playlist from GET /api/v1/aartis
+      final detailFuture = _aartiService.getAartiById(aartiId);
+      final listFuture = _aartiService.getAartis(page: 1, limit: 20);
+
+      final results = await Future.wait([detailFuture, listFuture]);
+      final detailResult = results[0];
+      final listResult = results[1];
+
+      List<AartiModel> aartis = [];
+      if (listResult.isSuccess && listResult.data != null) {
+        aartis = List<AartiModel>.from(listResult.data as List<AartiModel>);
+      }
+
+      int startIndex = 0;
+      if (detailResult.isSuccess && detailResult.data != null) {
+        final detailAarti = detailResult.data as AartiModel;
+        final existingIdx = aartis.indexWhere((a) => a.id == detailAarti.id);
+        if (existingIdx >= 0) {
+          aartis[existingIdx] = detailAarti;
+          startIndex = existingIdx;
+        } else {
+          aartis.insert(0, detailAarti);
+          startIndex = 0;
+        }
+      } else {
+        final existingIdx = aartis.indexWhere((a) => a.id == aartiId);
+        startIndex = existingIdx < 0 ? 0 : existingIdx;
+      }
+
+      if (aartis.isEmpty) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            hasError: true,
+            status: AartiPlayerStatus.empty,
+            errorMessage: 'Aarti not found',
+          ),
+        );
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          aartis: aartis,
+          currentIndex: startIndex,
+          isLoading: false,
+          hasError: false,
+          status: AartiPlayerStatus.success,
+        ),
       );
-      await _player.play();
-    } catch (_) {
+
+      // Load audio sources into just_audio player
+      final playableSources = <AudioSource>[];
+      for (final aarti in aartis) {
+        final url = ApiConstants.resolveMediaUrl(aarti.audioUrl);
+        if (url.isNotEmpty && (url.startsWith('http://') || url.startsWith('https://'))) {
+          playableSources.add(AudioSource.uri(Uri.parse(url)));
+        } else {
+          // Fallback placeholder or dummy source so index aligns
+          playableSources.add(AudioSource.uri(Uri.parse('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')));
+        }
+      }
+
+      if (playableSources.isNotEmpty) {
+        await _player.setAudioSources(
+          playableSources,
+          initialIndex: startIndex.clamp(0, playableSources.length - 1),
+        );
+        await _player.play();
+      }
+    } catch (e) {
       if (!isClosed) {
-        emit(state.copyWith(isLoading: false, hasError: true, isPlaying: false));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            hasError: true,
+            isPlaying: false,
+            status: AartiPlayerStatus.error,
+            errorMessage: e.toString(),
+          ),
+        );
       }
     }
   }

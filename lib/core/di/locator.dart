@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:infocontract/core/api/api_dio_client.dart';
 import 'package:infocontract/core/services/shared_preferences/shared_preferences.dart';
 import 'package:infocontract/core/services/snackbar/snackbar_service.dart';
+import 'package:infocontract/features/aarti/domain/service/aarti_service.dart';
+import 'package:infocontract/features/home/domain/service/home_service.dart';
+import 'package:infocontract/features/search/domain/service/search_service.dart';
 
 final locator = GetIt.instance;
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
@@ -18,4 +21,10 @@ Future<void> setupLocator() async {
   locator.registerLazySingleton<SharedPref>(() => sharedPref);
   locator.registerLazySingleton(() => ApiDioClient(dio));
   locator.registerLazySingleton(() => SnackbarService(scaffoldMessengerKey));
+
+  // Services
+  locator.registerLazySingleton<AartiService>(() => AartiService());
+  locator.registerLazySingleton<HomeService>(() => HomeService());
+  locator.registerLazySingleton<SearchService>(() => SearchService());
 }
+

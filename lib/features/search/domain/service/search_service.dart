@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:infocontract/core/api/api_result.dart';
 import 'package:infocontract/core/di/locator.dart';
 import 'package:infocontract/core/services/shared_preferences/shared_preferences.dart';
+import 'package:infocontract/features/aarti/domain/service/aarti_service.dart';
 import 'package:infocontract/features/home/domain/service/home_service.dart';
 import 'package:infocontract/features/search/domain/model/quick_search_item.dart';
 import 'package:infocontract/features/search/domain/model/search_aarti_item.dart';
 
 class SearchService {
-  SearchService({HomeService? homeService, SharedPref? sharedPref})
-      : _homeService = homeService ?? HomeService(),
+  SearchService({
+    AartiService? aartiService,
+    HomeService? homeService,
+    SharedPref? sharedPref,
+  })  : _aartiService = aartiService ?? locator<AartiService>(),
+        _homeService = homeService ?? locator<HomeService>(),
         _sharedPref = sharedPref ?? locator<SharedPref>();
 
+  final AartiService _aartiService;
   final HomeService _homeService;
   final SharedPref _sharedPref;
 
@@ -20,8 +27,33 @@ class SearchService {
     'shiva': '3:42',
   };
 
+  /// Searches aartis via backend `GET /api/v1/aartis?search=<query>`
+  Future<ApiResult<List<SearchAartiItem>>> searchAartis(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final result = await _aartiService.getAartis(
+      search: query,
+      page: page,
+      limit: limit,
+    );
+
+    if (result.isSuccess && result.data != null) {
+      final items = result.data!.map((aarti) {
+        return SearchAartiItem(
+          aarti: aarti,
+          duration: aarti.duration ?? _durations[aarti.id] ?? '3:00',
+        );
+      }).toList();
+      return ApiResult.success(items, statusCode: result.statusCode);
+    }
+
+    return ApiResult.error(result.errorMessage, statusCode: result.statusCode);
+  }
+
   List<SearchAartiItem> getAllAartis() {
-    return _homeService.getPopularAartis().map((aarti) {
+    return _homeService.getDefaultPopularAartis().map((aarti) {
       return SearchAartiItem(
         aarti: aarti,
         duration: _durations[aarti.id] ?? '3:00',

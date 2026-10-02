@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:infocontract/core/api/constants/api_constants.dart';
 import 'package:infocontract/features/home/domain/model/aarti_model.dart';
 import 'package:infocontract/features/home/presentation/widgets/component/aarti_colors.dart';
 
@@ -36,17 +38,40 @@ class AartiListTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AartiColors.iconBackground,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.temple_hindu_rounded,
-              color: AartiColors.primary,
-              size: 30,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AartiColors.iconBackground,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: aarti.imageUrl != null && aarti.imageUrl!.trim().isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: ApiConstants.resolveMediaUrl(aarti.imageUrl),
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AartiColors.primary,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => const Icon(
+                        Icons.temple_hindu_rounded,
+                        color: AartiColors.primary,
+                        size: 30,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.temple_hindu_rounded,
+                      color: AartiColors.primary,
+                      size: 30,
+                    ),
             ),
           ),
           const SizedBox(width: 12),

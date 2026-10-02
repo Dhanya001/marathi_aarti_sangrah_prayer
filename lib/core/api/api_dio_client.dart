@@ -42,9 +42,55 @@ class ApiDioClient {
       ),
     );
   }
+  String _normalizePath(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    final currentBase = _dio.options.baseUrl;
+    if (currentBase.endsWith('/api/v1') || currentBase.endsWith('/api/v1/')) {
+      if (path.startsWith('/api/v1/')) {
+        return path.substring('/api/v1/'.length);
+      } else if (path.startsWith('/api/v1')) {
+        return path.substring('/api/v1'.length);
+      }
+      if (path.startsWith('/')) {
+        return path.substring(1);
+      }
+    }
+    return path;
+  }
+
+  String _extractErrorMessage(DioException e) {
+    if (e.response?.data != null) {
+      final data = e.response!.data;
+      if (data is Map) {
+        if (data['message'] != null) {
+          if (data['message'] is List) {
+            return (data['message'] as List).join(', ');
+          }
+          return data['message'].toString();
+        }
+        if (data['error'] != null) {
+          return data['error'].toString();
+        }
+      } else if (data is String && data.isNotEmpty) {
+        return data;
+      }
+    }
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.sendTimeout) {
+      return 'Connection timed out. Please try again.';
+    }
+    if (e.type == DioExceptionType.connectionError) {
+      return 'Could not connect to the server. Please check your internet connection.';
+    }
+    return e.message ?? 'An unexpected error occurred.';
+  }
+
   Future<ApiResult<T>> get<T>(
     String path, {
-      String? baseUrl,
+    String? baseUrl,
     Map<String, dynamic>? queryParameters,
     Options? options,
     Map<String, dynamic>? data,
@@ -56,15 +102,18 @@ class ApiDioClient {
       }
 
       final response = await _dio.get<T>(
-        path,
+        _normalizePath(path),
         queryParameters: queryParameters,
         options: options,
         data: data,
       );
       _dio.options.baseUrl = originalBaseUrl;
-      return ApiResult.success(response.data);
+      return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
-      return ApiResult.error(e.message);
+      return ApiResult.error(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -76,14 +125,17 @@ class ApiDioClient {
   }) async {
     try {
       final response = await _dio.post<T>(
-        path,
+        _normalizePath(path),
         data: data,
         queryParameters: queryParameters,
         options: options,
       );
-      return ApiResult.success(response.data);
+      return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
-      return ApiResult.error(e.message);
+      return ApiResult.error(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -95,14 +147,17 @@ class ApiDioClient {
   }) async {
     try {
       final response = await _dio.delete<T>(
-        path,
+        _normalizePath(path),
         queryParameters: queryParameters,
         data: data,
         options: options,
       );
-      return ApiResult.success(response.data);
+      return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
-      return ApiResult.error(e.message);
+      return ApiResult.error(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -114,14 +169,17 @@ class ApiDioClient {
   }) async {
     try {
       final response = await _dio.put<T>(
-        path,
+        _normalizePath(path),
         data: data,
         queryParameters: queryParameters,
         options: options,
       );
-      return ApiResult.success(response.data);
+      return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
-      return ApiResult.error(e.message);
+      return ApiResult.error(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -133,14 +191,17 @@ class ApiDioClient {
   }) async {
     try {
       final response = await _dio.patch<T>(
-        path,
+        _normalizePath(path),
         data: data,
         queryParameters: queryParameters,
         options: options,
       );
-      return ApiResult.success(response.data);
+      return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
-      return ApiResult.error(e.message);
+      return ApiResult.error(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -150,12 +211,12 @@ class ApiDioClient {
   }) async {
     try {
       final response = await _dio.get<T>(
-        path,
+        _normalizePath(path),
         queryParameters: queryParameters,
       );
       return response;
     } on DioException catch (e) {
-      throw Exception('Failed to fetch options: ${e.message}');
+      throw Exception('Failed to fetch options: ${_extractErrorMessage(e)}');
     }
   }
 

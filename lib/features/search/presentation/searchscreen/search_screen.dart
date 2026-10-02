@@ -198,13 +198,23 @@ class _ResultsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (state.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AartiColors.primary),
+      );
+    }
+
     if (state.results.isEmpty) {
       return Center(
-        child: Text(
-          'searchNoResults'.tr(),
-          style: const TextStyle(
-            color: AartiColors.textSecondary,
-            fontSize: 15,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            state.errorMessage ?? 'searchNoResults'.tr(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AartiColors.textSecondary,
+              fontSize: 15,
+            ),
           ),
         ),
       );

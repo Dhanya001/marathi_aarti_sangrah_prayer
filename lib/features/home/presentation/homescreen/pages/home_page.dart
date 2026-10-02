@@ -27,33 +27,43 @@ class HomePage extends StatelessWidget {
       ),
       body: BlocBuilder<HomeCubit, HomeState>(
         builder: (context, state) {
-          if (state.isLoading) {
+          if (state.isLoading && state.popularAartis.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(color: AartiColors.primary),
             );
           }
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                HeroCarousel(
-                  banners: state.banners,
-                  currentIndex: state.currentBannerIndex,
-                  onPageChanged: context.read<HomeCubit>().updateBannerIndex,
-                ),
-                const SizedBox(height: 24),
-                CategorySection(categories: state.categories),
-                const SizedBox(height: 24),
-                PopularAartiSection(
-                  aartis: state.popularAartis,
-                  onFavoriteTap: context.read<HomeCubit>().toggleFavorite,
-                  onPlayTap: (id) => openAartiDetail(context, id),
-                  onAartiTap: (id) => openAartiDetail(context, id),
-                ),
-                const SizedBox(height: 24),
-              ],
+          return RefreshIndicator(
+            color: AartiColors.primary,
+            onRefresh: () => context.read<HomeCubit>().refresh(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  HeroCarousel(
+                    banners: state.banners,
+                    currentIndex: state.currentBannerIndex,
+                    onPageChanged: context.read<HomeCubit>().updateBannerIndex,
+                  ),
+                  const SizedBox(height: 24),
+                  CategorySection(
+                    categories: state.categories,
+                    selectedCategoryId: state.selectedCategoryId,
+                    onCategorySelected: context.read<HomeCubit>().selectCategory,
+                  ),
+                  const SizedBox(height: 24),
+                  PopularAartiSection(
+                    aartis: state.popularAartis,
+                    isLoading: state.isAartisLoading,
+                    onFavoriteTap: context.read<HomeCubit>().toggleFavorite,
+                    onPlayTap: (id) => openAartiDetail(context, id),
+                    onAartiTap: (id) => openAartiDetail(context, id),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           );
         },

@@ -10,6 +10,8 @@ class SearchState extends Equatable {
     this.quickSearchItems = const [],
     this.popularQueryKeys = const [],
     this.popularAartis = const [],
+    this.isLoading = false,
+    this.errorMessage,
   });
 
   final String query;
@@ -18,6 +20,8 @@ class SearchState extends Equatable {
   final List<QuickSearchItem> quickSearchItems;
   final List<String> popularQueryKeys;
   final List<SearchAartiItem> popularAartis;
+  final bool isLoading;
+  final String? errorMessage;
 
   bool get isSearching => query.trim().isNotEmpty;
 
@@ -28,6 +32,8 @@ class SearchState extends Equatable {
     List<QuickSearchItem>? quickSearchItems,
     List<String>? popularQueryKeys,
     List<SearchAartiItem>? popularAartis,
+    bool? isLoading,
+    String? errorMessage,
   }) {
     return SearchState(
       query: query ?? this.query,
@@ -36,6 +42,8 @@ class SearchState extends Equatable {
       quickSearchItems: quickSearchItems ?? this.quickSearchItems,
       popularQueryKeys: popularQueryKeys ?? this.popularQueryKeys,
       popularAartis: popularAartis ?? this.popularAartis,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
@@ -47,5 +55,8 @@ class SearchState extends Equatable {
         quickSearchItems,
         popularQueryKeys,
         popularAartis,
+        isLoading,
+        errorMessage,
       ];
 }
+

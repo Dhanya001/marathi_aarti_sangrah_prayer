@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:infocontract/core/api/constants/api_constants.dart';
 import 'package:infocontract/features/home/domain/model/aarti_model.dart';
 import 'package:infocontract/features/home/presentation/widgets/component/aarti_colors.dart';
 
@@ -22,17 +24,40 @@ class AartiHeaderCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 108,
-            height: 108,
-            decoration: BoxDecoration(
-              color: AartiColors.iconBackground,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.temple_hindu_rounded,
-              color: AartiColors.primary,
-              size: 56,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              width: 108,
+              height: 108,
+              decoration: BoxDecoration(
+                color: AartiColors.iconBackground,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: aarti.imageUrl != null && aarti.imageUrl!.trim().isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: ApiConstants.resolveMediaUrl(aarti.imageUrl),
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AartiColors.primary,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => const Icon(
+                        Icons.temple_hindu_rounded,
+                        color: AartiColors.primary,
+                        size: 56,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.temple_hindu_rounded,
+                      color: AartiColors.primary,
+                      size: 56,
+                    ),
             ),
           ),
           const SizedBox(width: 14),
@@ -43,6 +68,7 @@ class AartiHeaderCard extends StatelessWidget {
                 Text(
                   aarti.titleKey.tr(),
                   style: const TextStyle(
+
                     color: AartiColors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,

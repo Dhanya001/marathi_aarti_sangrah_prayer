@@ -6,25 +6,43 @@ import 'package:infocontract/core/services/shared_preferences/shared_preferences
 
 class ApiDioClient {
   late final Dio _dio;
-  final SharedPref sharedPref = SharedPref.instance;
+  final SharedPref? _sharedPref;
   final String? baseUrl;
-  ApiDioClient(this._dio, {this.baseUrl}) {
-    _dio.options = BaseOptions(
-      baseUrl: baseUrl ?? ApiConstants.baseUrl,
 
-      // connectTimeout: Duration(seconds: 15),
-      // receiveTimeout: Duration(seconds: 15),
+  SharedPref? get sharedPref {
+    if (_sharedPref != null) return _sharedPref;
+    try {
+      return SharedPref.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String formatBaseUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return trimmed.endsWith('/') ? trimmed : '$trimmed/';
+  }
+
+  ApiDioClient(this._dio, {this.baseUrl, SharedPref? sharedPref})
+      : _sharedPref = sharedPref {
+    final effectiveBase = formatBaseUrl(baseUrl ?? ApiConstants.baseUrl);
+    _dio.options = BaseOptions(
+      baseUrl: effectiveBase,
+      connectTimeout: const Duration(seconds: 25),
+      receiveTimeout: const Duration(seconds: 25),
+      sendTimeout: const Duration(seconds: 25),
       headers: ApiConstants.headers,
     );
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          if (sharedPref.accessToken.isNotEmpty) {
+          final token = sharedPref?.accessToken;
+          if (token != null && token.isNotEmpty) {
             if (kDebugMode) {
-              print(sharedPref.accessToken);
+              print(token);
             }
-            options.headers['Authorization'] =
-                'Bearer ${sharedPref.accessToken}';
+            options.headers['Authorization'] = 'Bearer $token';
           } else {
             // options.headers['Authorization'] =
             //     AppPreferenceKeys.basicAuth;
@@ -42,23 +60,29 @@ class ApiDioClient {
       ),
     );
   }
-  String _normalizePath(String path) {
+
+  String normalizePath(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    final currentBase = _dio.options.baseUrl;
-    if (currentBase.endsWith('/api/v1') || currentBase.endsWith('/api/v1/')) {
-      if (path.startsWith('/api/v1/')) {
-        return path.substring('/api/v1/'.length);
-      } else if (path.startsWith('/api/v1')) {
-        return path.substring('/api/v1'.length);
-      }
-      if (path.startsWith('/')) {
-        return path.substring(1);
-      }
+    var cleanPath = path.trim();
+    if (cleanPath.startsWith('/api/v1/')) {
+      cleanPath = cleanPath.substring('/api/v1/'.length);
+    } else if (cleanPath.startsWith('/api/v1')) {
+      cleanPath = cleanPath.substring('/api/v1'.length);
+    } else if (cleanPath.startsWith('api/v1/')) {
+      cleanPath = cleanPath.substring('api/v1/'.length);
+    } else if (cleanPath.startsWith('api/v1')) {
+      cleanPath = cleanPath.substring('api/v1'.length);
     }
-    return path;
+
+    while (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.substring(1);
+    }
+    return cleanPath;
   }
+
+  String _normalizePath(String path) => normalizePath(path);
 
   String _extractErrorMessage(DioException e) {
     if (e.response?.data != null) {
@@ -98,7 +122,7 @@ class ApiDioClient {
     try {
       final originalBaseUrl = _dio.options.baseUrl;
       if (baseUrl != null && baseUrl.isNotEmpty) {
-        _dio.options.baseUrl = baseUrl;
+        _dio.options.baseUrl = formatBaseUrl(baseUrl);
       }
 
       final response = await _dio.get<T>(

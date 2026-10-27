@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:infocontract/core/api/api_result.dart';
 import 'package:infocontract/core/api/constants/api_constants.dart';
+import 'package:infocontract/core/di/locator.dart';
+import 'package:infocontract/core/services/network/global_error_handler.dart';
 import 'package:infocontract/core/services/shared_preferences/shared_preferences.dart';
 
 class ApiDioClient {
@@ -63,19 +65,9 @@ class ApiDioClient {
 
   String normalizePath(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
+      return path.trim();
     }
     var cleanPath = path.trim();
-    if (cleanPath.startsWith('/api/v1/')) {
-      cleanPath = cleanPath.substring('/api/v1/'.length);
-    } else if (cleanPath.startsWith('/api/v1')) {
-      cleanPath = cleanPath.substring('/api/v1'.length);
-    } else if (cleanPath.startsWith('api/v1/')) {
-      cleanPath = cleanPath.substring('api/v1/'.length);
-    } else if (cleanPath.startsWith('api/v1')) {
-      cleanPath = cleanPath.substring('api/v1'.length);
-    }
-
     while (cleanPath.startsWith('/')) {
       cleanPath = cleanPath.substring(1);
     }
@@ -101,13 +93,31 @@ class ApiDioClient {
         return data;
       }
     }
+
+    final statusCode = e.response?.statusCode;
+    if (statusCode == 400) {
+      return 'Invalid request. Please try again.';
+    }
+    if (statusCode == 401) {
+      return 'Session expired. Please log in again.';
+    }
+    if (statusCode == 403) {
+      return 'Access denied.';
+    }
+    if (statusCode == 404) {
+      return 'Requested resource not found.';
+    }
+    if (statusCode == 502 || statusCode == 503 || statusCode == 504) {
+      return 'Server is temporarily unavailable. Please try again.';
+    }
+
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.sendTimeout) {
       return 'Connection timed out. Please try again.';
     }
     if (e.type == DioExceptionType.connectionError) {
-      return 'Could not connect to the server. Please check your internet connection.';
+      return 'Could not connect to the server. Please check your network connection.';
     }
     return e.message ?? 'An unexpected error occurred.';
   }
@@ -118,6 +128,7 @@ class ApiDioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
     Map<String, dynamic>? data,
+    bool showServerDownPage = true,
   }) async {
     try {
       final originalBaseUrl = _dio.options.baseUrl;
@@ -134,6 +145,26 @@ class ApiDioClient {
       _dio.options.baseUrl = originalBaseUrl;
       return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
+      if (showServerDownPage) {
+        try {
+          locator<GlobalErrorHandler>().handleApiError(
+            e,
+            onRetry: () async {
+              final res = await get<T>(
+                path,
+                baseUrl: baseUrl,
+                queryParameters: queryParameters,
+                options: options,
+                data: data,
+                showServerDownPage: false,
+              );
+              return res.isSuccess;
+            },
+            allowServerDownPage: true,
+          );
+        } catch (_) {}
+      }
+
       return ApiResult.error(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
@@ -156,6 +187,14 @@ class ApiDioClient {
       );
       return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
+      try {
+        locator<GlobalErrorHandler>().handleApiError(
+          e,
+          onRetry: null,
+          allowServerDownPage: false,
+        );
+      } catch (_) {}
+
       return ApiResult.error(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
@@ -178,6 +217,14 @@ class ApiDioClient {
       );
       return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
+      try {
+        locator<GlobalErrorHandler>().handleApiError(
+          e,
+          onRetry: null,
+          allowServerDownPage: false,
+        );
+      } catch (_) {}
+
       return ApiResult.error(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
@@ -200,6 +247,14 @@ class ApiDioClient {
       );
       return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
+      try {
+        locator<GlobalErrorHandler>().handleApiError(
+          e,
+          onRetry: null,
+          allowServerDownPage: false,
+        );
+      } catch (_) {}
+
       return ApiResult.error(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
@@ -222,6 +277,14 @@ class ApiDioClient {
       );
       return ApiResult.success(response.data, statusCode: response.statusCode);
     } on DioException catch (e) {
+      try {
+        locator<GlobalErrorHandler>().handleApiError(
+          e,
+          onRetry: null,
+          allowServerDownPage: false,
+        );
+      } catch (_) {}
+
       return ApiResult.error(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,

@@ -20,7 +20,7 @@ class HomeService {
   final ApiDioClient _dioClient;
   final SharedPref _sharedPref;
 
-  /// Fetches categories from the backend GET /api/v1/categories
+  /// Fetches categories from the backend GET /categories
   Future<ApiResult<List<CategoryModel>>> getCategories() async {
     final response = await _dioClient.get(ApiConstants.categories);
 
@@ -54,7 +54,33 @@ class HomeService {
     );
   }
 
-  /// Fetches popular aartis from GET /api/v1/aartis, optionally filtered by category
+  /// Fetches a category by ID from GET /categories/:id
+  Future<ApiResult<CategoryModel>> getCategoryById(dynamic id) async {
+    final response = await _dioClient.get(ApiConstants.categoryById(id));
+
+    if (response.isSuccess && response.data != null) {
+      final rawData = response.data;
+      Map<String, dynamic>? itemMap;
+
+      if (rawData is Map && rawData['data'] is Map) {
+        itemMap = Map<String, dynamic>.from(rawData['data'] as Map);
+      } else if (rawData is Map<String, dynamic>) {
+        itemMap = rawData;
+      }
+
+      if (itemMap != null) {
+        final category = CategoryModel.fromJson(itemMap);
+        return ApiResult.success(category, statusCode: response.statusCode);
+      }
+    }
+
+    return ApiResult.error(
+      response.errorMessage ?? 'Failed to load category',
+      statusCode: response.statusCode,
+    );
+  }
+
+  /// Fetches popular aartis from GET /aartis, optionally filtered by category
   Future<ApiResult<List<AartiModel>>> getPopularAartis({
     int? categoryId,
     int page = 1,

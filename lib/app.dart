@@ -2,10 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:infocontract/core/di/locator.dart';
-import 'package:infocontract/core/router/app_router.dart';
+import 'package:infocontract/core/widgets/network_status_banner.dart';
 import 'package:infocontract/packages/theme/theme_cubit.dart';
-
-final _appRouter = AppRouter();
 
 class InfoContract extends StatelessWidget {
   const InfoContract({super.key});
@@ -18,14 +16,20 @@ class InfoContract extends StatelessWidget {
           supportedLocales: context.supportedLocales,
           locale: context.locale,
           localizationsDelegates: context.localizationDelegates,
-          routerDelegate: _appRouter.delegate(),
-          routeInformationParser: _appRouter.defaultRouteParser(),
+          routerDelegate: appRouter.delegate(),
+          routeInformationParser: appRouter.defaultRouteParser(),
           scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
           title: 'Marathi Aarti Sangrah & Prayer',
           theme: theme,
+          builder: (context, child) {
+            return NetworkStatusBanner(
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
         );
       },
     );
   }
 }
+

@@ -16,7 +16,7 @@ class AartiService {
   final SharedPref _sharedPref;
 
   /// Fetches aartis from the backend with optional search, category filter, and pagination.
-  /// Example: GET /api/v1/aartis?search=ganpati&categoryId=1&page=1&limit=10
+  /// Example: GET /aartis?search=ganpati&categoryId=1&page=1&limit=10
   Future<ApiResult<List<AartiModel>>> getAartis({
     String? search,
     int? categoryId,
@@ -73,7 +73,7 @@ class AartiService {
     );
   }
 
-  /// Fetches an individual aarti by ID from GET /api/v1/aartis/:id
+  /// Fetches an individual aarti by ID from GET /aartis/:id
   Future<ApiResult<AartiModel>> getAartiById(dynamic id) async {
     final response = await _dioClient.get(ApiConstants.aartiById(id));
 

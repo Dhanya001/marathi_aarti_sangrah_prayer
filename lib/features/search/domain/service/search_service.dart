@@ -27,7 +27,7 @@ class SearchService {
     'shiva': '3:42',
   };
 
-  /// Searches aartis via backend `GET /api/v1/aartis?search=<query>`
+  /// Searches aartis via backend `GET /aartis?search=<query>`
   Future<ApiResult<List<SearchAartiItem>>> searchAartis(
     String query, {
     int page = 1,

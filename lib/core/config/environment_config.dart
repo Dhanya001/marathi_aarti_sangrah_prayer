@@ -10,7 +10,7 @@ class EnvironmentConfig {
   static const String prodBaseUrl = 'https://dev-api.infocontracts.com/api/v1/';
 
   // Development Base URL (Dev Tunnel / Local backend)
-  static const String devBaseUrl = 'https://ppmm92rv-3000.inc1.devtunnels.ms/api/v1/';
+  static const String devBaseUrl = 'https://ppmm92rv-3000.inc1.devtunnels.ms';
 
   // Staging Base URL
   static const String stagingBaseUrl = 'https://staging-api.infocontracts.com/api/v1/';

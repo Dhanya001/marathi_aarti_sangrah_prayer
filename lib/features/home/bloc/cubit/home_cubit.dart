@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:infocontract/core/di/locator.dart';
+import 'package:infocontract/core/services/network/global_error_handler.dart';
 import 'package:infocontract/core/services/shared_preferences/shared_preferences.dart';
 import 'package:infocontract/features/aarti/domain/service/aarti_service.dart';
 import 'package:infocontract/features/home/bloc/cubit/home_state.dart';
@@ -16,6 +17,9 @@ class HomeCubit extends Cubit<HomeState> {
         _aartiService = aartiService ?? locator<AartiService>(),
         _sharedPref = sharedPref ?? locator<SharedPref>(),
         super(const HomeState(isLoading: true, status: HomeStatus.loading)) {
+    try {
+      locator<GlobalErrorHandler>().registerRefreshCallback(_onNetworkOrServerRecovery);
+    } catch (_) {}
     loadHomeData();
   }
 
@@ -93,7 +97,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   /// Category filter:
-  /// When category is selected, queries `GET /api/v1/aartis?categoryId=<id>`
+  /// When category is selected, queries `GET /aartis?categoryId=<id>`
   /// When tapped again, deselects and resets to all aartis.
   /// Resets pagination when category changes.
   Future<void> selectCategory(CategoryModel? category) async {
@@ -220,6 +224,20 @@ class HomeCubit extends Cubit<HomeState> {
     return aartis
         .map((aarti) => aarti.copyWith(isFavorite: favoriteIds.contains(aarti.id)))
         .toList();
+  }
+
+  void _onNetworkOrServerRecovery() {
+    if (!isClosed) {
+      refresh();
+    }
+  }
+
+  @override
+  Future<void> close() {
+    try {
+      locator<GlobalErrorHandler>().unregisterRefreshCallback(_onNetworkOrServerRecovery);
+    } catch (_) {}
+    return super.close();
   }
 }
 

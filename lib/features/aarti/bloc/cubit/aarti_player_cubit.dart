@@ -59,8 +59,8 @@ class AartiPlayerCubit extends Cubit<AartiPlayerState> {
     });
 
     try {
-      // Fetch the specific Aarti by ID from GET /api/v1/aartis/:id
-      // and the surrounding playlist from GET /api/v1/aartis
+      // Fetch the specific Aarti by ID from GET /aartis/:id
+      // and the surrounding playlist from GET /aartis
       final detailFuture = _aartiService.getAartiById(aartiId);
       final listFuture = _aartiService.getAartis(page: 1, limit: 20);
 

@@ -6,7 +6,7 @@ class ApiConstants {
   static const String prodBaseUrl = 'https://dev-api.infocontracts.com/api/v1/';
 
   // Active Development Base URL (Microsoft Dev Tunnel)
-  static const String devBaseUrl = 'https://ppmm92rv-3000.inc1.devtunnels.ms/api/v1/';
+  static const String devBaseUrl = 'https://ppmm92rv-3000.inc1.devtunnels.ms';
 
   // Optional compile-time override: flutter build ... --dart-define=API_URL=https://...
   static const String _envBaseUrl = String.fromEnvironment('API_URL');
@@ -51,45 +51,21 @@ class ApiConstants {
 
   /// Resolves media URLs (audio, image) from the backend.
   ///
-  /// - If the URL points to a local backend development address (localhost:3000, 10.0.2.2:3000, 127.0.0.1:3000),
-  ///   it rewrites that host to the active [baseHost] (e.g. Microsoft Dev Tunnel).
-  /// - If the URL is a relative path (e.g. /uploads/images/profile_pic.png), it prepends [baseHost].
-  /// - Unrelated external full URLs (e.g. SoundHelix, Cloudinary, AWS S3) are preserved as-is.
+  /// - Full URLs (e.g. http:// or https://) are returned as-is.
+  /// - Relative paths (e.g. /uploads/images/...) are resolved using the devtunnel [baseHost].
   static String resolveMediaUrl(String? url) {
     if (url == null || url.trim().isEmpty) return '';
     final trimmed = url.trim();
 
-    // Local development backend origins that should map to baseHost
-    const localOrigins = [
-      'http://localhost:3000',
-      'https://localhost:3000',
-      'http://10.0.2.2:3000',
-      'https://10.0.2.2:3000',
-      'http://127.0.0.1:3000',
-      'https://127.0.0.1:3000',
-    ];
-
-    for (final localOrigin in localOrigins) {
-      if (trimmed.startsWith(localOrigin)) {
-        final path = trimmed.substring(localOrigin.length);
-        final cleanHost = baseHost.endsWith('/')
-            ? baseHost.substring(0, baseHost.length - 1)
-            : baseHost;
-        final cleanPath = path.startsWith('/') ? path : '/$path';
-        return '$cleanHost$cleanPath';
-      }
-    }
-
-    // Unrelated external full URLs remain unchanged
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       return trimmed;
     }
 
-    // Relative upload paths from backend
-    final host = baseHost;
-    final cleanHost = host.endsWith('/') ? host.substring(0, host.length - 1) : host;
+    final host = baseHost.endsWith('/')
+        ? baseHost.substring(0, baseHost.length - 1)
+        : baseHost;
     final cleanPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
-    return '$cleanHost$cleanPath';
+    return '$host$cleanPath';
   }
 
   // Endpoints
